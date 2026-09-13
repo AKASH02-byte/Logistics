@@ -22,7 +22,7 @@
 
 **Phase 1 — Auth + shell**
 - Supabase browser/server client factories (`lib/supabase`).
-- Admin auth via Supabase Auth (Google OAuth) + `middleware.ts` session
+- Admin auth via Supabase Auth (Google OAuth) + `proxy.ts` session
   refresh per `@supabase/ssr`.
 - Labour auth: Login Key hashing (`lib/auth/labour.ts`), session cookie
   issuance/verification, `/api/driver/login`.
@@ -67,4 +67,12 @@
 
 ## Status
 
-Phase 0 complete as of this pass. Phase 1 is next.
+Phase 0 complete. Phase 1 (auth + shell) implemented: Supabase client
+factories, admin auth via `@supabase/ssr` + OAuth callback, labour auth
+(Login Key hashing/lockout, signed session cookie, `/api/driver/login`),
+`requirePermission`/`requireLabourSession`, `proxy.ts` session refresh,
+bootstrap-admin script, admin/driver shells with placeholder pages for
+every route in docs/ROUTES.md, the vehicle-session open/close API, and the
+driver login screen (SVG truck + CSS idle/departing animation). Not yet
+tested end-to-end against a real Supabase project — no project has been
+provisioned yet. Phase 2 (fleet + labour operations UI) is next.

@@ -79,9 +79,10 @@ server-side; if none, redirect to `/login`. If a labour has no OPEN
 `vehicle_sessions` row, every driver route redirects to `/driver/select-truck`
 first — they cannot reach the dashboard without an active session.
 
-## Middleware
+## Proxy (formerly middleware)
 
-`middleware.ts` at the project root only handles the cheap routing split
+`proxy.ts` at the project root (Next.js 16's `proxy` file convention,
+replacing `middleware.ts`) only handles the cheap routing split
 (which cookie is present → which portal segment is reachable) and Supabase
 session refresh, per `@supabase/ssr` guidance. It does not do permission
 checks — those stay server-side in layouts/route handlers where the full

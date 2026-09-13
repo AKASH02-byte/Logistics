@@ -10,10 +10,11 @@ bootstrap script, not by special-casing "the first Google user" in app code
 
 1. Deploy the app and apply all migrations.
 2. Sign in once via `/login` with the Google account that should become the
-   Super Admin. This creates a `users` row via the Supabase Auth trigger/
-   route with `role` left unset — actually with **no role granted**
-   (`status = 'INVITED'`), so the account can authenticate but has no
-   permissions yet.
+   Super Admin. The OAuth callback creates a `users` row with a placeholder
+   `role = 'STAFF'` (the `role` column is `NOT NULL`) but `status =
+   'INVITED'`. `requirePermission()` rejects any non-`ACTIVE` user
+   regardless of role, so this account can authenticate but has zero
+   permissions until step 3 runs.
 3. Run the bootstrap script from the server (never from the browser):
 
    ```bash

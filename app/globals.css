@@ -24,3 +24,407 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* ============================================================================
+   Driver login — premium dark industrial transportation theme.
+   Scoped under .driver-login-page so it never leaks into the admin surface.
+   ============================================================================ */
+
+.driver-login-page {
+  --graphite-950: #101215;
+  --graphite-900: #16181c;
+  --graphite-800: #1e2126;
+  --graphite-700: #2a2e35;
+  --graphite-600: #3a3f47;
+  --asphalt-line: #2f333a;
+  --steel-200: #c7ccd3;
+  --steel-50: #f4f5f7;
+  --amber: #f5a623;
+  --amber-glow: rgba(245, 166, 35, 0.35);
+
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: 1.15fr 1fr;
+  grid-template-rows: auto 1fr;
+  grid-template-areas: "brand auth" "truck auth";
+  background: var(--graphite-950);
+  color: var(--steel-50);
+  position: relative;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .driver-login-page {
+    grid-template-columns: 1fr;
+    grid-template-rows: auto auto auto;
+    /* Logo/heading -> auth form -> truck (decorative, below the fold). */
+    grid-template-areas: "brand" "auth" "truck";
+  }
+}
+
+.driver-login-brand {
+  grid-area: brand;
+  position: relative;
+  padding: clamp(2rem, 6vw, 5rem) clamp(2rem, 6vw, 5rem) 0;
+  background:
+    repeating-linear-gradient(
+      0deg,
+      transparent 0px,
+      transparent 63px,
+      var(--asphalt-line) 64px
+    ),
+    radial-gradient(circle at 30% 20%, rgba(245, 166, 35, 0.06), transparent 55%),
+    var(--graphite-900);
+}
+
+.driver-login-truck-panel {
+  grid-area: truck;
+  position: relative;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 clamp(2rem, 6vw, 5rem) clamp(2rem, 6vw, 5rem);
+  background: var(--graphite-900);
+  overflow: hidden;
+}
+
+.driver-login-brand::after,
+.driver-login-truck-panel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    90deg,
+    transparent 0,
+    transparent 118px,
+    rgba(255, 255, 255, 0.03) 119px,
+    transparent 120px
+  );
+  pointer-events: none;
+}
+
+.driver-login-logo {
+  font-size: 0.85rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--steel-200);
+  font-weight: 600;
+}
+
+.driver-login-headline {
+  margin-top: 2rem;
+  font-size: clamp(2rem, 4.2vw, 3.4rem);
+  line-height: 1.05;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+.driver-login-headline span {
+  display: block;
+  color: var(--amber);
+}
+
+.driver-login-subtext {
+  margin-top: 1rem;
+  max-width: 32ch;
+  color: var(--steel-200);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.driver-login-auth {
+  grid-area: auth;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(1.5rem, 5vw, 4rem);
+  background: var(--graphite-950);
+}
+
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: linear-gradient(180deg, var(--graphite-800), var(--graphite-900));
+  border: 1px solid var(--graphite-700);
+  border-radius: 16px;
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+}
+
+.auth-card--shake {
+  animation: auth-shake 0.4s ease;
+}
+
+.auth-card-eyebrow {
+  font-size: 0.75rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--amber);
+  font-weight: 600;
+}
+
+.auth-card-title {
+  margin-top: 0.5rem;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--steel-50);
+}
+
+.auth-tabs {
+  display: flex;
+  margin-top: 1.5rem;
+  border: 1px solid var(--graphite-700);
+  border-radius: 10px;
+  overflow: hidden;
+}
+
+.auth-tab {
+  flex: 1;
+  padding: 0.6rem 0.5rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--steel-200);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.auth-tab[data-active="true"] {
+  background: var(--graphite-700);
+  color: var(--steel-50);
+}
+
+.auth-field {
+  margin-top: 1.25rem;
+}
+
+.auth-label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--steel-200);
+  margin-bottom: 0.4rem;
+  font-weight: 500;
+}
+
+.auth-input-wrap {
+  position: relative;
+}
+
+.auth-input {
+  width: 100%;
+  min-height: 52px;
+  padding: 0 3rem 0 1rem;
+  border-radius: 10px;
+  border: 1px solid var(--graphite-700);
+  background: var(--graphite-950);
+  color: var(--steel-50);
+  font-size: 1rem;
+  letter-spacing: 0.03em;
+  outline: none;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-input:focus {
+  border-color: var(--amber);
+  box-shadow: 0 0 0 3px var(--amber-glow);
+}
+
+.auth-input-toggle {
+  position: absolute;
+  right: 0.75rem;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: var(--steel-200);
+  cursor: pointer;
+  padding: 0.5rem;
+  display: flex;
+}
+
+.auth-error {
+  margin-top: 0.85rem;
+  font-size: 0.85rem;
+  color: #ff9b9b;
+  background: rgba(194, 59, 59, 0.12);
+  border: 1px solid rgba(194, 59, 59, 0.35);
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+}
+
+.auth-submit {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 1.5rem;
+  border-radius: 10px;
+  border: none;
+  background: var(--amber);
+  color: #1a1305;
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: 0.02em;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+
+.auth-submit:hover:not(:disabled) {
+  box-shadow: 0 10px 24px -10px var(--amber-glow);
+}
+
+.auth-submit:disabled {
+  cursor: not-allowed;
+  opacity: 0.85;
+}
+
+.auth-submit[data-state="success"] {
+  background: #35c477;
+  color: #062412;
+}
+
+.auth-spinner {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.25);
+  border-top-color: rgba(0, 0, 0, 0.75);
+  animation: auth-spin 0.7s linear infinite;
+}
+
+.auth-oauth-button {
+  width: 100%;
+  min-height: 52px;
+  margin-top: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid var(--graphite-700);
+  background: var(--steel-50);
+  color: var(--graphite-950);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+}
+
+@keyframes auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes auth-shake {
+  10%, 90% { transform: translateX(-1px); }
+  20%, 80% { transform: translateX(2px); }
+  30%, 50%, 70% { transform: translateX(-4px); }
+  40%, 60% { transform: translateX(4px); }
+}
+
+/* ---- truck stage ---- */
+
+.truck-stage {
+  width: 100%;
+  max-width: 460px;
+  position: relative;
+  z-index: 1;
+}
+
+.truck-svg {
+  width: 100%;
+  height: auto;
+  overflow: visible;
+}
+
+.truck-shadow {
+  fill: rgba(0, 0, 0, 0.45);
+  filter: blur(2px);
+  animation: truck-shadow-pulse 3.4s ease-in-out infinite;
+}
+
+.truck-headlight-glow {
+  opacity: 0.35;
+  animation: truck-headlight-breathe 3.4s ease-in-out infinite;
+}
+
+.truck-headlight {
+  fill: #6b5a33;
+  transition: fill 0.4s ease;
+}
+
+.truck-body {
+  animation: truck-idle-float 3.4s ease-in-out infinite;
+  transform-origin: 205px 156px;
+}
+
+.truck-wheel {
+  transform-origin: center;
+  animation: truck-wheel-idle 3.4s ease-in-out infinite;
+}
+
+@keyframes truck-idle-float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-1.5px); }
+}
+
+@keyframes truck-shadow-pulse {
+  0%, 100% { opacity: 0.9; }
+  50% { opacity: 0.7; }
+}
+
+@keyframes truck-headlight-breathe {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 0.45; }
+}
+
+@keyframes truck-wheel-idle {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-1.5deg); }
+}
+
+/* ---- departing state (on successful auth) ---- */
+
+.truck-stage--departing .truck-headlight {
+  fill: #ffe3a3;
+}
+
+.truck-stage--departing .truck-headlight-glow {
+  opacity: 0.9;
+  animation: none;
+}
+
+.truck-stage--departing .truck-wheel {
+  animation: truck-wheel-spin 0.35s linear infinite;
+}
+
+.truck-stage--departing .truck-body,
+.truck-stage--departing .truck-wheel,
+.truck-stage--departing .truck-shadow {
+  animation-name: truck-wheel-spin, truck-depart;
+}
+
+.truck-stage--departing {
+  animation: truck-depart 0.9s cubic-bezier(0.5, 0, 0.85, 0.35) 0.15s forwards;
+}
+
+@keyframes truck-wheel-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes truck-depart {
+  0% { transform: translateX(0); opacity: 1; }
+  100% { transform: translateX(160%); opacity: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .truck-body,
+  .truck-wheel,
+  .truck-shadow,
+  .truck-headlight-glow,
+  .truck-stage--departing {
+    animation: none !important;
+  }
+}
