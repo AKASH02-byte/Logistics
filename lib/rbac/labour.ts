@@ -1,16 +1,12 @@
 import { cookies } from "next/headers";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { LABOUR_SESSION_COOKIE, verifyLabourSessionToken } from "@/lib/auth/labour-session";
+import { findLabourById } from "@/lib/demo/store";
 import type { LabourRow } from "@/types/database";
 import { UnauthorizedError } from "./errors";
 
 /**
- * Call at the top of every driver API route handler. Verifies the signed
- * session cookie, then re-checks the labour is still ACTIVE in the
- * database (a labour can be deactivated mid-shift by an admin). Returns the
- * current LabourRow — callers must scope every subsequent query to
- * `labour.id` themselves; this function does not know which resource is
- * being accessed.
+ * DEMO MODE: looks up the labour in the hardcoded in-memory store instead
+ * of Supabase. See lib/demo/store.ts.
  */
 export async function requireLabourSession(): Promise<LabourRow> {
   const cookieStore = await cookies();
@@ -20,21 +16,26 @@ export async function requireLabourSession(): Promise<LabourRow> {
   const payload = verifyLabourSessionToken(token);
   if (!payload) throw new UnauthorizedError();
 
-  // Service role client: labour sessions are not Supabase Auth sessions, so
-  // there is no auth.uid() for RLS to key off. This route has already
-  // authenticated the caller above — this lookup is scoped to exactly one
-  // row by primary key, not an open-ended query.
-  const supabase = createSupabaseServiceRoleClient();
-  const { data, error } = await supabase
-    .from("labours")
-    .select("*")
-    .eq("id", payload.labourId)
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (error || !data || data.status !== "ACTIVE") {
+  const labour = findLabourById(payload.labourId);
+  if (!labour || labour.status !== "ACTIVE") {
     throw new UnauthorizedError("Labour account is not active");
   }
 
-  return data as LabourRow;
+  return {
+    id: labour.id,
+    labour_code: labour.labourCode,
+    full_name: labour.fullName,
+    phone: labour.phone,
+    address: null,
+    licence_number: null,
+    licence_expiry: null,
+    joining_date: "",
+    language: "en",
+    status: labour.status,
+    photo_url: null,
+    created_by: null,
+    created_at: "",
+    updated_at: "",
+    deleted_at: null,
+  };
 }

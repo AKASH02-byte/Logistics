@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const openSessionSchema = z.object({
-  truckId: z.string().uuid("Select a valid truck"),
+  truckId: z.string().trim().min(1, "Select a valid truck"),
 });
 
 export const closeSessionSchema = z.object({

@@ -1,6 +1,8 @@
-import { createHmac, timingSafeEqual } from "node:crypto";
+import { signPayload, verifyPayload } from "./session-token";
+import { getSessionSecret } from "./session-secret";
 
 export { LABOUR_SESSION_COOKIE } from "./labour-session-constants";
+
 const SESSION_TTL_SECONDS = 60 * 60 * 16; // one working shift
 
 export interface LabourSessionPayload {
@@ -10,29 +12,8 @@ export interface LabourSessionPayload {
   expiresAt: number;
 }
 
-function getSecret(): string {
-  const secret = process.env.LABOUR_SESSION_SECRET;
-  if (!secret) {
-    throw new Error("Missing required environment variable: LABOUR_SESSION_SECRET");
-  }
-  return secret;
-}
-
-function sign(payloadB64: string): string {
-  return createHmac("sha256", getSecret()).update(payloadB64).digest("base64url");
-}
-
 export function createLabourSessionToken(labourId: string, labourCode: string): string {
-  const now = Date.now();
-  const payload: LabourSessionPayload = {
-    labourId,
-    labourCode,
-    issuedAt: now,
-    expiresAt: now + SESSION_TTL_SECONDS * 1000,
-  };
-  const payloadB64 = Buffer.from(JSON.stringify(payload)).toString("base64url");
-  const signature = sign(payloadB64);
-  return `${payloadB64}.${signature}`;
+  return signPayload(getSessionSecret(), { labourId, labourCode }, SESSION_TTL_SECONDS);
 }
 
 /**
@@ -42,25 +23,7 @@ export function createLabourSessionToken(labourId: string, labourCode: string): 
  * it for authorization decisions (a labour can be deactivated mid-shift).
  */
 export function verifyLabourSessionToken(token: string): LabourSessionPayload | null {
-  const [payloadB64, signature] = token.split(".");
-  if (!payloadB64 || !signature) return null;
-
-  const expectedSignature = sign(payloadB64);
-  const a = Buffer.from(signature);
-  const b = Buffer.from(expectedSignature);
-  if (a.length !== b.length || !timingSafeEqual(a, b)) return null;
-
-  try {
-    const payload = JSON.parse(
-      Buffer.from(payloadB64, "base64url").toString("utf8")
-    ) as LabourSessionPayload;
-    if (typeof payload.expiresAt !== "number" || payload.expiresAt < Date.now()) {
-      return null;
-    }
-    return payload;
-  } catch {
-    return null;
-  }
+  return verifyPayload<LabourSessionPayload>(getSessionSecret(), token);
 }
 
 export const labourSessionCookieOptions = {

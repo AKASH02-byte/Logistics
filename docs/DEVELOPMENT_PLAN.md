@@ -1,5 +1,37 @@
 # Development plan
 
+## ⚠ Current mode: hardcoded demo data, no database
+
+At the user's explicit request, the app currently runs with **zero
+database** — Supabase has been removed and `lib/demo/store.ts` holds a
+hardcoded in-memory admin account, 10 labour accounts, and 10 trucks. This
+directly contradicts two of this project's own stated rules ("labour
+credentials are never hardcoded"; PostgreSQL/Supabase as required
+technology) and was done knowingly as a temporary way to get something
+runnable locally with zero setup, after that tradeoff was explained and
+confirmed.
+
+**What this means concretely:**
+- `lib/rbac/permissions.ts` / `lib/rbac/labour.ts` read from
+  `lib/demo/store.ts` instead of a `users`/`labours` table.
+- Admin login is Admin ID + password against one hardcoded account, not
+  Supabase Auth/Google OAuth (`app/api/admin/login/route.ts`).
+- Labour login compares against plaintext keys in the demo store, not
+  hashed values in a database (`app/api/driver/login/route.ts`).
+- State (vehicle sessions, odometer updates) lives in a `globalThis`
+  object — it resets on server restart and does not work across multiple
+  server instances.
+- `supabase/migrations/*.sql` and `docs/DATABASE.md`/`docs/RBAC.md`/
+  `docs/ARCHITECTURE.md` still describe the **intended real design** —
+  they were not deleted and are not stale; they're what this reverts to.
+
+**To revert to the real design**: reintroduce `@supabase/supabase-js` and
+`@supabase/ssr`, restore Supabase-backed versions of
+`lib/rbac/permissions.ts`/`lib/rbac/labour.ts` (git history has the
+pre-demo versions), run the migrations, and replace the two hardcoded
+login routes with the Supabase Auth callback + real credential checks
+described in docs/RBAC.md and docs/SETUP_ADMIN.md.
+
 ## Locked decisions (do not revisit without an explicit request)
 
 - No GPS/live tracking/telematics anywhere in the product. Distance =

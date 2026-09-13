@@ -2,9 +2,8 @@
 
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Loader2, Check, Truck } from "lucide-react";
+import { Eye, EyeOff, Loader2, Check } from "lucide-react";
 import { DriverLoginTruck, type TruckAnimationState } from "@/components/auth/DriverLoginTruck";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Tab = "labour" | "admin";
 type SubmitState = "idle" | "loading" | "success" | "error";
@@ -12,30 +11,41 @@ type SubmitState = "idle" | "loading" | "success" | "error";
 export default function LoginPage() {
   const router = useRouter();
   const [tab, setTab] = useState<Tab>("labour");
+
   const [labourId, setLabourId] = useState("");
   const [loginKey, setLoginKey] = useState("");
   const [showKey, setShowKey] = useState(false);
+
+  const [adminId, setAdminId] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   const [truckState, setTruckState] = useState<TruckAnimationState>("idle");
 
-  async function handleLabourSubmit(event: FormEvent) {
+  async function submit(
+    event: FormEvent,
+    endpoint: string,
+    body: Record<string, string>,
+    redirectTo: string
+  ) {
     event.preventDefault();
     setErrorMessage(null);
     setSubmitState("loading");
 
     try {
-      const response = await fetch("/api/driver/login", {
+      const response = await fetch(endpoint, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ labourId, loginKey }),
+        body: JSON.stringify(body),
       });
-      const body = await response.json();
+      const responseBody = await response.json();
 
       if (!response.ok) {
         setSubmitState("error");
-        setErrorMessage(body?.error?.message ?? "Something went wrong. Please try again.");
+        setErrorMessage(responseBody?.error?.message ?? "Something went wrong. Please try again.");
         setShake(true);
         setTimeout(() => setShake(false), 400);
         return;
@@ -43,20 +53,14 @@ export default function LoginPage() {
 
       setSubmitState("success");
       setTruckState("departing");
-      setTimeout(() => router.push("/driver/select-truck"), 850);
+      setTimeout(() => router.push(redirectTo), 850);
     } catch {
       setSubmitState("error");
       setErrorMessage("Could not reach the server. Check your connection and try again.");
     }
   }
 
-  async function handleGoogleSignIn() {
-    const supabase = createSupabaseBrowserClient();
-    await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: { redirectTo: `${window.location.origin}/api/auth/callback` },
-    });
-  }
+  const isBusy = submitState === "loading" || submitState === "success";
 
   return (
     <div className="driver-login-page">
@@ -89,7 +93,11 @@ export default function LoginPage() {
               role="tab"
               className="auth-tab"
               data-active={tab === "labour"}
-              onClick={() => setTab("labour")}
+              onClick={() => {
+                setTab("labour");
+                setErrorMessage(null);
+                setSubmitState("idle");
+              }}
             >
               Labour / Driver
             </button>
@@ -98,14 +106,22 @@ export default function LoginPage() {
               role="tab"
               className="auth-tab"
               data-active={tab === "admin"}
-              onClick={() => setTab("admin")}
+              onClick={() => {
+                setTab("admin");
+                setErrorMessage(null);
+                setSubmitState("idle");
+              }}
             >
               Admin / Staff
             </button>
           </div>
 
           {tab === "labour" ? (
-            <form onSubmit={handleLabourSubmit}>
+            <form
+              onSubmit={(e) =>
+                submit(e, "/api/driver/login", { labourId, loginKey }, "/driver/select-truck")
+              }
+            >
               <div className="auth-field">
                 <label className="auth-label" htmlFor="labourId">
                   Labour ID
@@ -153,7 +169,7 @@ export default function LoginPage() {
                 type="submit"
                 className="auth-submit"
                 data-state={submitState === "success" ? "success" : undefined}
-                disabled={submitState === "loading" || submitState === "success"}
+                disabled={isBusy}
               >
                 {submitState === "loading" && <Loader2 className="auth-spinner" size={18} />}
                 {submitState === "success" && <Check size={18} />}
@@ -165,16 +181,69 @@ export default function LoginPage() {
               </button>
             </form>
           ) : (
-            <div>
-              <p className="driver-login-subtext" style={{ marginTop: "1.25rem" }}>
-                Sign in with your company Google account. Access is granted by
-                a Super Admin after your first sign-in.
-              </p>
-              <button type="button" className="auth-oauth-button" onClick={handleGoogleSignIn}>
-                <Truck size={18} />
-                Continue with Google
+            <form
+              onSubmit={(e) =>
+                submit(e, "/api/admin/login", { adminId, password }, "/admin/dashboard")
+              }
+            >
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="adminId">
+                  Admin ID
+                </label>
+                <input
+                  id="adminId"
+                  className="auth-input"
+                  placeholder="admin"
+                  autoComplete="username"
+                  value={adminId}
+                  onChange={(e) => setAdminId(e.target.value)}
+                  required
+                />
+              </div>
+
+              <div className="auth-field">
+                <label className="auth-label" htmlFor="password">
+                  Password
+                </label>
+                <div className="auth-input-wrap">
+                  <input
+                    id="password"
+                    className="auth-input"
+                    type={showPassword ? "text" : "password"}
+                    placeholder="••••••••"
+                    autoComplete="current-password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                  />
+                  <button
+                    type="button"
+                    className="auth-input-toggle"
+                    onClick={() => setShowPassword((v) => !v)}
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+              </div>
+
+              {errorMessage && <p className="auth-error">{errorMessage}</p>}
+
+              <button
+                type="submit"
+                className="auth-submit"
+                data-state={submitState === "success" ? "success" : undefined}
+                disabled={isBusy}
+              >
+                {submitState === "loading" && <Loader2 className="auth-spinner" size={18} />}
+                {submitState === "success" && <Check size={18} />}
+                {submitState === "loading"
+                  ? "Signing in..."
+                  : submitState === "success"
+                    ? "Welcome aboard"
+                    : "Sign in"}
               </button>
-            </div>
+            </form>
           )}
         </div>
       </div>

@@ -1,39 +1,19 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { demoStore } from "@/lib/demo/store";
 
-async function getKpis() {
-  const supabase = await createSupabaseServerClient();
+function getKpis() {
+  const activeTrucks = demoStore.trucks.filter((t) => t.status === "ACTIVE").length;
+  const openSessions = demoStore.vehicleSessions.filter((s) => s.status === "OPEN").length;
 
-  const [{ count: activeTrucks }, { count: openSessions }, { count: tripsToday }] =
-    await Promise.all([
-      supabase
-        .from("trucks")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "ACTIVE")
-        .is("deleted_at", null),
-      supabase
-        .from("vehicle_sessions")
-        .select("id", { count: "exact", head: true })
-        .eq("status", "OPEN"),
-      supabase
-        .from("trips")
-        .select("id", { count: "exact", head: true })
-        .gte("created_at", new Date(new Date().setHours(0, 0, 0, 0)).toISOString()),
-    ]);
-
-  return {
-    activeTrucks: activeTrucks ?? 0,
-    openSessions: openSessions ?? 0,
-    tripsToday: tripsToday ?? 0,
-  };
+  return { activeTrucks, openSessions, totalLabours: demoStore.labours.length };
 }
 
-export default async function AdminDashboardPage() {
-  const kpis = await getKpis();
+export default function AdminDashboardPage() {
+  const kpis = getKpis();
 
   const tiles = [
     { label: "Active trucks", value: kpis.activeTrucks },
     { label: "Trucks on the road now", value: kpis.openSessions },
-    { label: "Trips today", value: kpis.tripsToday },
+    { label: "Registered labour", value: kpis.totalLabours },
   ];
 
   return (

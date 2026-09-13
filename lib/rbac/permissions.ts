@@ -1,70 +1,51 @@
-import { createSupabaseServerClient } from "@/lib/supabase/server";
-import type { PermissionCode } from "@/config/permissions";
-import type { UserRow } from "@/types/database";
+import { cookies } from "next/headers";
+import { ADMIN_SESSION_COOKIE, verifyAdminSessionToken } from "@/lib/auth/admin-session";
+import { demoStore } from "@/lib/demo/store";
 import { UnauthorizedError, ForbiddenError } from "./errors";
 
-/**
- * Resolves the calling admin/staff identity from the Supabase Auth session
- * on the current request. Returns null if there is no session, or if the
- * session exists but has no corresponding active `users` row (e.g. an
- * INVITED account still awaiting Super Admin bootstrap/role assignment).
- */
-export async function resolveAdminIdentity(): Promise<UserRow | null> {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user: authUser },
-  } = await supabase.auth.getUser();
-
-  if (!authUser) return null;
-
-  const { data, error } = await supabase
-    .from("users")
-    .select("*")
-    .eq("auth_user_id", authUser.id)
-    .is("deleted_at", null)
-    .maybeSingle();
-
-  if (error || !data) return null;
-  return data as UserRow;
+export interface AdminIdentity {
+  id: string;
+  full_name: string;
+  role: "SUPER_ADMIN";
+  status: "ACTIVE";
 }
 
 /**
- * Checks whether a role has a given permission. Delegates to the same
- * role_permissions table that backs the RLS policies (0003_rls.sql) — this
- * function is the application-code mirror of the `has_permission()` SQL
- * function, not an independent decision.
+ * DEMO MODE: resolves the admin identity from the hardcoded admin session
+ * cookie instead of a Supabase Auth session + `users` table lookup. There
+ * is exactly one admin account (lib/demo/store.ts) with SUPER_ADMIN,
+ * so every permission check below trivially passes for it. See the note at
+ * the top of lib/demo/store.ts and docs/DEVELOPMENT_PLAN.md.
  */
-export async function roleHasPermission(
-  role: UserRow["role"],
-  code: PermissionCode
-): Promise<boolean> {
-  const supabase = await createSupabaseServerClient();
-  const { data, error } = await supabase
-    .from("role_permissions")
-    .select("permissions!inner(code)")
-    .eq("role", role)
-    .eq("permissions.code", code)
-    .maybeSingle();
+export async function resolveAdminIdentity(): Promise<AdminIdentity | null> {
+  const cookieStore = await cookies();
+  const token = cookieStore.get(ADMIN_SESSION_COOKIE)?.value;
+  if (!token) return null;
 
-  return !error && !!data;
+  const payload = verifyAdminSessionToken(token);
+  if (!payload || payload.adminId !== demoStore.admin.adminId) return null;
+
+  return {
+    id: demoStore.admin.adminId,
+    full_name: demoStore.admin.fullName,
+    role: demoStore.admin.role,
+    status: "ACTIVE",
+  };
 }
 
 /**
- * Call at the top of every admin API route handler before touching data.
- * Throws UnauthorizedError (no session / no linked user) or ForbiddenError
- * (session valid, permission not granted to this role) — callers should map
- * these to 401/403 JSON responses. Never bypass this with a role-name
- * string comparison; see docs/RBAC.md.
+ * The single hardcoded admin is SUPER_ADMIN and holds every permission.
+ * Kept as an explicit function (rather than inlining `true`) so real
+ * per-role permission checks (docs/RBAC.md) drop back in without touching
+ * call sites once the database-backed identity returns.
  */
-export async function requirePermission(code: PermissionCode): Promise<UserRow> {
+export async function roleHasPermission(): Promise<boolean> {
+  return true;
+}
+
+export async function requirePermission(): Promise<AdminIdentity> {
   const identity = await resolveAdminIdentity();
   if (!identity) throw new UnauthorizedError();
-  if (identity.status !== "ACTIVE") {
-    throw new ForbiddenError("Account is not active");
-  }
-
-  const allowed = await roleHasPermission(identity.role, code);
-  if (!allowed) throw new ForbiddenError();
-
+  if (identity.status !== "ACTIVE") throw new ForbiddenError("Account is not active");
   return identity;
 }

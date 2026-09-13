@@ -1,5 +1,9 @@
 import type { ReactNode } from "react";
-import type { UserRow } from "@/types/database";
+
+interface AdminShellUser {
+  full_name: string;
+  role: string;
+}
 
 const NAV_ITEMS = [
   { href: "/admin/dashboard", label: "Dashboard" },
@@ -22,7 +26,7 @@ const NAV_ITEMS = [
   { href: "/admin/settings/users", label: "Settings" },
 ];
 
-export function AdminShell({ user, children }: { user: UserRow; children: ReactNode }) {
+export function AdminShell({ user, children }: { user: AdminShellUser; children: ReactNode }) {
   return (
     <div style={{ display: "flex", minHeight: "100dvh" }}>
       <nav

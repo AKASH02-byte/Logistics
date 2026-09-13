@@ -1,27 +1,16 @@
 import { redirect } from "next/navigation";
-import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { findTruckById, getOpenSessionForLabour } from "@/lib/demo/store";
 import { requireLabourSession } from "@/lib/rbac/labour";
 
 export default async function DriverDashboardPage() {
   const labour = await requireLabourSession();
-  const supabase = createSupabaseServiceRoleClient();
-
-  const { data: session } = await supabase
-    .from("vehicle_sessions")
-    .select("*, trucks(registration_number, make, model)")
-    .eq("labour_id", labour.id)
-    .eq("status", "OPEN")
-    .maybeSingle();
+  const session = getOpenSessionForLabour(labour.id);
 
   if (!session) {
     redirect("/driver/select-truck");
   }
 
-  const truck = session.trucks as unknown as {
-    registration_number: string;
-    make: string | null;
-    model: string | null;
-  };
+  const truck = findTruckById(session.truckId);
 
   return (
     <div>
@@ -35,13 +24,15 @@ export default async function DriverDashboardPage() {
           border: "1px solid #e5e7eb",
         }}
       >
-        <div style={{ fontSize: "1.1rem", fontWeight: 700 }}>{truck.registration_number}</div>
+        <div style={{ fontSize: "1.1rem", fontWeight: 700 }}>
+          {truck?.registrationNumber}
+        </div>
         <div style={{ color: "#6b7280", fontSize: "0.9rem" }}>
-          {[truck.make, truck.model].filter(Boolean).join(" ")}
+          {truck?.make} {truck?.model}
         </div>
         <div style={{ marginTop: "0.75rem", fontSize: "0.9rem" }}>
           Opening odometer:{" "}
-          <strong>{Number(session.opening_odometer).toLocaleString("en-IN")} km</strong>
+          <strong>{session.openingOdometer.toLocaleString("en-IN")} km</strong>
         </div>
       </div>
 

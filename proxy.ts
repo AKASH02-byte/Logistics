@@ -1,55 +1,30 @@
-import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { LABOUR_SESSION_COOKIE } from "@/lib/auth/labour-session-constants";
+import { ADMIN_SESSION_COOKIE } from "@/lib/auth/admin-session";
 
 /**
- * Cheap routing split + Supabase session refresh only. No permission or
- * role checks here — those need a database round-trip against `users`/
- * `labours` and belong in the (admin)/(driver) layouts, which have proper
- * server-side data access. See docs/ROUTES.md.
+ * Cheap routing split only — checks for the presence of a session cookie,
+ * not its validity or the identity behind it. Real verification happens in
+ * the (admin)/(driver) layouts, which can do the async lookup. See
+ * docs/ROUTES.md.
+ *
+ * DEMO MODE note: this also replaces the Supabase session-refresh logic
+ * that would normally live here (see docs/ARCHITECTURE.md) since admin
+ * auth is currently the hardcoded lib/demo/store.ts account rather than
+ * Supabase Auth.
  */
-export async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
-
-  const supabase = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        getAll() {
-          return request.cookies.getAll();
-        },
-        setAll(cookiesToSet) {
-          for (const { name, value } of cookiesToSet) {
-            request.cookies.set(name, value);
-          }
-          response = NextResponse.next({ request });
-          for (const { name, value, options } of cookiesToSet) {
-            response.cookies.set(name, value, options);
-          }
-        },
-      },
-    }
-  );
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
+export function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname.startsWith("/admin") && !user) {
+  if (pathname.startsWith("/admin") && !request.cookies.has(ADMIN_SESSION_COOKIE)) {
     return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  if (pathname.startsWith("/driver")) {
-    const hasLabourSession = request.cookies.has(LABOUR_SESSION_COOKIE);
-    if (!hasLabourSession) {
-      return NextResponse.redirect(new URL("/login", request.url));
-    }
+  if (pathname.startsWith("/driver") && !request.cookies.has(LABOUR_SESSION_COOKIE)) {
+    return NextResponse.redirect(new URL("/login", request.url));
   }
 
-  return response;
+  return NextResponse.next();
 }
 
 export const config = {
