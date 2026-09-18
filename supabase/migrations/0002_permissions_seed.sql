@@ -70,38 +70,11 @@ insert into permissions (code, module, description) values
 on conflict (code) do nothing;
 
 -- ----------------------------------------------------------------------------
--- Role grants. SUPER_ADMIN and BUSINESS_OWNER get everything.
+-- Role grants. SUPER_ADMIN gets everything; STAFF is read-only.
 -- ----------------------------------------------------------------------------
 
 insert into role_permissions (role, permission_id)
 select 'SUPER_ADMIN', id from permissions
-on conflict do nothing;
-
-insert into role_permissions (role, permission_id)
-select 'BUSINESS_OWNER', id from permissions
-on conflict do nothing;
-
-insert into role_permissions (role, permission_id)
-select 'MANAGER', id from permissions
-where code not in ('settings.manage', 'users.create', 'users.update')
-on conflict do nothing;
-
-insert into role_permissions (role, permission_id)
-select 'ACCOUNTANT', id from permissions
-where module in ('finance', 'invoices', 'reports', 'customers', 'vendors')
-   or code in ('trips.read', 'expenses.read', 'expenses.approve', 'projects.read')
-on conflict do nothing;
-
-insert into role_permissions (role, permission_id)
-select 'FLEET_MANAGER', id from permissions
-where module in ('trucks', 'drivers', 'sessions', 'trips', 'fuel', 'maintenance', 'tyres', 'reports')
-   or code = 'expenses.create'
-on conflict do nothing;
-
-insert into role_permissions (role, permission_id)
-select 'PROJECT_MANAGER', id from permissions
-where module in ('projects', 'tenders', 'reports')
-   or code in ('expenses.create', 'expenses.read', 'customers.read', 'vendors.read', 'invoices.read')
 on conflict do nothing;
 
 insert into role_permissions (role, permission_id)

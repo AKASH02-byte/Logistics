@@ -16,7 +16,7 @@ Session resolved (Supabase Auth cookie OR labour session cookie)
 Server looks up the application identity (users row, or labours row)
      │
      ▼
-Role resolved (app_role enum, or "LABOUR" for the driver surface)
+Role resolved (app_role enum for admins, or a separate labour identity for the driver surface)
      │
      ▼
 Permission checked for the specific action (e.g. "trucks.update")
@@ -34,14 +34,13 @@ whether or not a button for it exists in their UI.
 
 ```
 SUPER_ADMIN       full system access, only role that can grant other roles
-BUSINESS_OWNER    full operational + financial access
-MANAGER           broad operational access, no user/role management
-ACCOUNTANT        finance, invoices, payments, reports
-FLEET_MANAGER     trucks, drivers, sessions, trips, fuel, maintenance, tyres
-PROJECT_MANAGER   projects, tenders, project expenses
 STAFF             read-only across operational modules
-LABOUR            driver-portal only; not part of the permission matrix below
+DRIVER/LABOUR     driver-portal identity; not an admin app_role or part of the permission matrix below
 ```
+
+The current admin role set is intentionally limited to `SUPER_ADMIN` and
+`STAFF`. The other administrative roles can be introduced later when the
+business needs different permission boundaries.
 
 ## Permissions
 
@@ -63,8 +62,8 @@ settings.manage
 audit.read
 ```
 
-Never check `role === 'MANAGER'` in business logic. Always check a
-permission: `hasPermission(identity, 'trucks.update')`. This lets permission
+Never check a role name in business logic. Always check a permission:
+`hasPermission(identity, 'trucks.update')`. This lets permission
 grants change per-role (or eventually per-user overrides) without touching
 route code.
 

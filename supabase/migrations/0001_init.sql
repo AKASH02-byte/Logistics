@@ -11,13 +11,7 @@ create extension if not exists "pgcrypto";
 
 create type app_role as enum (
   'SUPER_ADMIN',
-  'BUSINESS_OWNER',
-  'MANAGER',
-  'ACCOUNTANT',
-  'FLEET_MANAGER',
-  'PROJECT_MANAGER',
-  'STAFF',
-  'LABOUR'
+  'STAFF'
 );
 
 create type user_status as enum ('ACTIVE', 'SUSPENDED', 'INVITED');
