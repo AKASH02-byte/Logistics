@@ -51,11 +51,32 @@ export interface DemoVehicleSession {
   closedAt: string | null;
 }
 
+export interface DemoTrip {
+  id: string;
+  vehicleSessionId: string;
+  startOdometer: number;
+  endOdometer: number;
+  fromLocation: string;
+  toLocation: string;
+  createdAt: string;
+}
+
+export interface DemoFuel {
+  id: string;
+  vehicleSessionId: string;
+  odometer: number;
+  liters: number;
+  cost: number;
+  createdAt: string;
+}
+
 interface DemoStore {
   admin: DemoAdmin;
   labours: DemoLabour[];
   trucks: DemoTruck[];
   vehicleSessions: DemoVehicleSession[];
+  trips: DemoTrip[];
+  fuelLogs: DemoFuel[];
 }
 
 const ADMIN: DemoAdmin = {
@@ -97,6 +118,8 @@ function createInitialStore(): DemoStore {
     labours: LABOURS,
     trucks: TRUCKS,
     vehicleSessions: [],
+    trips: [],
+    fuelLogs: [],
   };
 }
 
@@ -165,4 +188,24 @@ export function closeVehicleSession(
   if (truck) truck.currentOdometer = closingOdometer;
 
   return session;
+}
+
+export function logTrip(data: Omit<DemoTrip, "id" | "createdAt">): DemoTrip {
+  const trip = {
+    ...data,
+    id: `trip-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  demoStore.trips.push(trip);
+  return trip;
+}
+
+export function logFuel(data: Omit<DemoFuel, "id" | "createdAt">): DemoFuel {
+  const fuel = {
+    ...data,
+    id: `fuel-${Date.now()}`,
+    createdAt: new Date().toISOString(),
+  };
+  demoStore.fuelLogs.push(fuel);
+  return fuel;
 }

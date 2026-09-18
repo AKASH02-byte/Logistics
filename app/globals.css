@@ -5,6 +5,17 @@
   --foreground: #171717;
 }
 
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+  margin: 0;
+  background: #101215;
+}
+
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
@@ -20,9 +31,28 @@
 }
 
 body {
-  background: var(--background);
+  background: #101215;
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+  min-height: 100vh;
+}
+
+/* ── Utility: hide scrollbar while keeping scroll functionality ── */
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* ── Admin surface: card hover lift ── */
+.admin-card-lift {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.admin-card-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px -8px rgba(0, 0, 0, 0.1);
 }
 
 /* ============================================================================
@@ -42,9 +72,10 @@ body {
   --amber: #f5a623;
   --amber-glow: rgba(245, 166, 35, 0.35);
 
-  min-height: 100dvh;
+  width: 100%;
+  min-height: 100vh;
   display: grid;
-  grid-template-columns: 1.15fr 1fr;
+  grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.95fr);
   grid-template-rows: auto 1fr;
   grid-template-areas: "brand auth" "truck auth";
   background: var(--graphite-950);
@@ -57,15 +88,15 @@ body {
   .driver-login-page {
     grid-template-columns: 1fr;
     grid-template-rows: auto auto auto;
-    /* Logo/heading -> auth form -> truck (decorative, below the fold). */
     grid-template-areas: "brand" "auth" "truck";
+    min-height: auto;
   }
 }
 
 .driver-login-brand {
   grid-area: brand;
   position: relative;
-  padding: clamp(2rem, 6vw, 5rem) clamp(2rem, 6vw, 5rem) 0;
+  padding: clamp(2rem, 5vw, 4.5rem) clamp(2rem, 5vw, 5rem) 0;
   background:
     repeating-linear-gradient(
       0deg,
@@ -75,6 +106,7 @@ body {
     ),
     radial-gradient(circle at 30% 20%, rgba(245, 166, 35, 0.06), transparent 55%),
     var(--graphite-900);
+  border-right: 1px solid rgba(255, 255, 255, 0.04);
 }
 
 .driver-login-truck-panel {
@@ -136,18 +168,18 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: clamp(1.5rem, 5vw, 4rem);
+  padding: clamp(1.5rem, 4vw, 4rem);
   background: var(--graphite-950);
 }
 
 .auth-card {
-  width: 100%;
-  max-width: 400px;
-  background: linear-gradient(180deg, var(--graphite-800), var(--graphite-900));
+  width: min(100%, 430px);
+  background: linear-gradient(180deg, rgba(38, 42, 48, 0.96), rgba(20, 22, 27, 0.96));
   border: 1px solid var(--graphite-700);
-  border-radius: 16px;
-  padding: clamp(1.5rem, 4vw, 2.5rem);
+  border-radius: 18px;
+  padding: clamp(1.5rem, 3vw, 2.5rem);
   box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(3px);
 }
 
 .auth-card--shake {
@@ -328,7 +360,7 @@ body {
 
 .truck-stage {
   width: 100%;
-  max-width: 460px;
+  max-width: 560px;
   position: relative;
   z-index: 1;
 }
@@ -357,11 +389,11 @@ body {
 
 .truck-body {
   animation: truck-idle-float 3.4s ease-in-out infinite;
-  transform-origin: 205px 156px;
+  transform-origin: 280px 185px;
 }
 
+/* Per-wheel transform-origins are set via inline style on the <g> element */
 .truck-wheel {
-  transform-origin: center;
   animation: truck-wheel-idle 3.4s ease-in-out infinite;
 }
 
@@ -397,13 +429,11 @@ body {
 }
 
 .truck-stage--departing .truck-wheel {
-  animation: truck-wheel-spin 0.35s linear infinite;
+  animation: truck-wheel-spin 0.3s linear infinite;
 }
 
-.truck-stage--departing .truck-body,
-.truck-stage--departing .truck-wheel,
-.truck-stage--departing .truck-shadow {
-  animation-name: truck-wheel-spin, truck-depart;
+.truck-stage--departing .truck-body {
+  animation: none;
 }
 
 .truck-stage--departing {

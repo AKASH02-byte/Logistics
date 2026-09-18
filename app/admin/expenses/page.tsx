@@ -1,5 +1,6 @@
-import { ComingSoon } from "@/components/layout/ComingSoon";
+import { Receipt } from "lucide-react";
+import { AdminModulePage } from "@/components/admin/AdminModulePage";
 
 export default function Page() {
-  return <ComingSoon title="Expenses" phase="Phase 3" />;
+  return <AdminModulePage config={{ title: "Expenses", eyebrow: "Cost control", description: "Track operating spend across the fleet and keep every rupee tied to a business activity.", icon: Receipt, accent: "from-rose-500 to-orange-400", stats: [{ label: "This month", value: "₹4.82L", detail: "+8.4% vs last month" }, { label: "Awaiting review", value: "12", detail: "Needs approval" }, { label: "Avg. expense", value: "₹8,940", detail: "Per transaction" }, { label: "Categories", value: "08", detail: "Active categories" }], columns: ["Expense", "Owner", "Date", "Amount"], rows: [{ cells: ["Diesel advance", "Ravi Kumar", "17 Sep 2026", "₹18,500"], status: { label: "Approved", tone: "green" } }, { cells: ["Toll & permits", "Suresh Reddy", "16 Sep 2026", "₹6,240"], status: { label: "Review", tone: "amber" } }, { cells: ["Workshop supplies", "Fleet team", "15 Sep 2026", "₹24,800"], status: { label: "Approved", tone: "green" } }, { cells: ["Route allowance", "Manoj Singh", "14 Sep 2026", "₹4,600"], status: { label: "Pending", tone: "slate" } }] }} />;
 }

@@ -3,6 +3,7 @@
 import { useState, type FormEvent } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, Check } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { DriverLoginTruck, type TruckAnimationState } from "@/components/auth/DriverLoginTruck";
 
 type Tab = "labour" | "admin";
@@ -64,8 +65,14 @@ export default function LoginPage() {
 
   return (
     <div className="driver-login-page">
-      <div className="driver-login-brand">
-        <span className="driver-login-logo">Fleet Operations</span>
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6, ease: "easeOut" }}
+        className="driver-login-brand"
+      >
+        <img src="/agk-logo.svg" alt="AGK Logistics & Infrastructure" className="h-16 w-40 rounded-xl object-cover object-left shadow-lg shadow-black/20" />
+        <span className="driver-login-logo">AGK Logistics & Infrastructure</span>
         <h1 className="driver-login-headline">
           Move. Manage.
           <span>Deliver.</span>
@@ -74,14 +81,24 @@ export default function LoginPage() {
           One system for every truck, every trip, and every rupee — from the
           yard to the ledger.
         </p>
-      </div>
+      </motion.div>
 
-      <div className="driver-login-truck-panel">
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, delay: 0.2 }}
+        className="driver-login-truck-panel"
+      >
         <DriverLoginTruck state={truckState} />
-      </div>
+      </motion.div>
 
       <div className="driver-login-auth">
-        <div className={`auth-card ${shake ? "auth-card--shake" : ""}`}>
+        <motion.div 
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className={`auth-card ${shake ? "auth-card--shake" : ""}`}
+        >
           <span className="auth-card-eyebrow">Welcome back</span>
           <h2 className="auth-card-title">
             {tab === "labour" ? "Labour / Driver Access" : "Admin / Staff Access"}
@@ -91,7 +108,7 @@ export default function LoginPage() {
             <button
               type="button"
               role="tab"
-              className="auth-tab"
+              className="auth-tab relative"
               data-active={tab === "labour"}
               onClick={() => {
                 setTab("labour");
@@ -100,11 +117,14 @@ export default function LoginPage() {
               }}
             >
               Labour / Driver
+              {tab === "labour" && (
+                <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500" />
+              )}
             </button>
             <button
               type="button"
               role="tab"
-              className="auth-tab"
+              className="auth-tab relative"
               data-active={tab === "admin"}
               onClick={() => {
                 setTab("admin");
@@ -113,139 +133,166 @@ export default function LoginPage() {
               }}
             >
               Admin / Staff
+              {tab === "admin" && (
+                <motion.div layoutId="tab-indicator" className="absolute bottom-0 left-0 right-0 h-0.5 bg-amber-500" />
+              )}
             </button>
           </div>
 
-          {tab === "labour" ? (
-            <form
-              onSubmit={(e) =>
-                submit(e, "/api/driver/login", { labourId, loginKey }, "/driver/select-truck")
-              }
-            >
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="labourId">
-                  Labour ID
-                </label>
-                <input
-                  id="labourId"
-                  className="auth-input"
-                  placeholder="LAB001"
-                  autoComplete="username"
-                  value={labourId}
-                  onChange={(e) => setLabourId(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="loginKey">
-                  Login Key
-                </label>
-                <div className="auth-input-wrap">
+          <AnimatePresence mode="wait">
+            {tab === "labour" ? (
+              <motion.form
+                key="labour"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                onSubmit={(e) =>
+                  submit(e, "/api/driver/login", { labourId, loginKey }, "/driver/select-truck")
+                }
+              >
+                <div className="auth-field">
+                  <label className="auth-label" htmlFor="labourId">
+                    Labour ID
+                  </label>
                   <input
-                    id="loginKey"
+                    id="labourId"
                     className="auth-input"
-                    type={showKey ? "text" : "password"}
-                    placeholder="7K4P-92MX-81"
-                    autoComplete="current-password"
-                    value={loginKey}
-                    onChange={(e) => setLoginKey(e.target.value)}
+                    placeholder="LAB001"
+                    autoComplete="username"
+                    value={labourId}
+                    onChange={(e) => setLabourId(e.target.value)}
                     required
                   />
-                  <button
-                    type="button"
-                    className="auth-input-toggle"
-                    onClick={() => setShowKey((v) => !v)}
-                    aria-label={showKey ? "Hide login key" : "Show login key"}
-                  >
-                    {showKey ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
                 </div>
-              </div>
 
-              {errorMessage && <p className="auth-error">{errorMessage}</p>}
+                <div className="auth-field">
+                  <label className="auth-label" htmlFor="loginKey">
+                    Login Key
+                  </label>
+                  <div className="auth-input-wrap">
+                    <input
+                      id="loginKey"
+                      className="auth-input"
+                      type={showKey ? "text" : "password"}
+                      placeholder="7K4P-92MX-81"
+                      autoComplete="current-password"
+                      value={loginKey}
+                      onChange={(e) => setLoginKey(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="auth-input-toggle"
+                      onClick={() => setShowKey((v) => !v)}
+                      aria-label={showKey ? "Hide login key" : "Show login key"}
+                    >
+                      {showKey ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
 
-              <button
-                type="submit"
-                className="auth-submit"
-                data-state={submitState === "success" ? "success" : undefined}
-                disabled={isBusy}
+                {errorMessage && (
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="auth-error">
+                    {errorMessage}
+                  </motion.p>
+                )}
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className="auth-submit"
+                  data-state={submitState === "success" ? "success" : undefined}
+                  disabled={isBusy}
+                >
+                  {submitState === "loading" && <Loader2 className="auth-spinner" size={18} />}
+                  {submitState === "success" && <Check size={18} />}
+                  {submitState === "loading"
+                    ? "Signing in..."
+                    : submitState === "success"
+                      ? "Welcome aboard"
+                      : "Sign in"}
+                </motion.button>
+              </motion.form>
+            ) : (
+              <motion.form
+                key="admin"
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
+                transition={{ duration: 0.2 }}
+                onSubmit={(e) =>
+                  submit(e, "/api/admin/login", { adminId, password }, "/admin/dashboard")
+                }
               >
-                {submitState === "loading" && <Loader2 className="auth-spinner" size={18} />}
-                {submitState === "success" && <Check size={18} />}
-                {submitState === "loading"
-                  ? "Signing in..."
-                  : submitState === "success"
-                    ? "Welcome aboard"
-                    : "Sign in"}
-              </button>
-            </form>
-          ) : (
-            <form
-              onSubmit={(e) =>
-                submit(e, "/api/admin/login", { adminId, password }, "/admin/dashboard")
-              }
-            >
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="adminId">
-                  Admin ID
-                </label>
-                <input
-                  id="adminId"
-                  className="auth-input"
-                  placeholder="admin"
-                  autoComplete="username"
-                  value={adminId}
-                  onChange={(e) => setAdminId(e.target.value)}
-                  required
-                />
-              </div>
-
-              <div className="auth-field">
-                <label className="auth-label" htmlFor="password">
-                  Password
-                </label>
-                <div className="auth-input-wrap">
+                <div className="auth-field">
+                  <label className="auth-label" htmlFor="adminId">
+                    Admin ID
+                  </label>
                   <input
-                    id="password"
+                    id="adminId"
                     className="auth-input"
-                    type={showPassword ? "text" : "password"}
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="admin"
+                    autoComplete="username"
+                    value={adminId}
+                    onChange={(e) => setAdminId(e.target.value)}
                     required
                   />
-                  <button
-                    type="button"
-                    className="auth-input-toggle"
-                    onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? "Hide password" : "Show password"}
-                  >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                  </button>
                 </div>
-              </div>
 
-              {errorMessage && <p className="auth-error">{errorMessage}</p>}
+                <div className="auth-field">
+                  <label className="auth-label" htmlFor="password">
+                    Password
+                  </label>
+                  <div className="auth-input-wrap">
+                    <input
+                      id="password"
+                      className="auth-input"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      autoComplete="current-password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="auth-input-toggle"
+                      onClick={() => setShowPassword((v) => !v)}
+                      aria-label={showPassword ? "Hide password" : "Show password"}
+                    >
+                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    </button>
+                  </div>
+                </div>
 
-              <button
-                type="submit"
-                className="auth-submit"
-                data-state={submitState === "success" ? "success" : undefined}
-                disabled={isBusy}
-              >
-                {submitState === "loading" && <Loader2 className="auth-spinner" size={18} />}
-                {submitState === "success" && <Check size={18} />}
-                {submitState === "loading"
-                  ? "Signing in..."
-                  : submitState === "success"
-                    ? "Welcome aboard"
-                    : "Sign in"}
-              </button>
-            </form>
-          )}
-        </div>
+                {errorMessage && (
+                  <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="auth-error">
+                    {errorMessage}
+                  </motion.p>
+                )}
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  type="submit"
+                  className="auth-submit"
+                  data-state={submitState === "success" ? "success" : undefined}
+                  disabled={isBusy}
+                >
+                  {submitState === "loading" && <Loader2 className="auth-spinner" size={18} />}
+                  {submitState === "success" && <Check size={18} />}
+                  {submitState === "loading"
+                    ? "Signing in..."
+                    : submitState === "success"
+                      ? "Welcome aboard"
+                      : "Sign in"}
+                </motion.button>
+              </motion.form>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
     </div>
   );

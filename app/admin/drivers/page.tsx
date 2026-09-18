@@ -1,5 +1,9 @@
-import { ComingSoon } from "@/components/layout/ComingSoon";
+import { demoStore } from "@/lib/demo/store";
+import { DriversClient } from "./DriversClient";
 
-export default function Page() {
-  return <ComingSoon title="Drivers" phase="Phase 2" />;
+export default async function DriversPage() {
+  // In demo mode, fetch from the global store
+  const drivers = [...demoStore.labours];
+  
+  return <DriversClient initialDrivers={drivers} />;
 }

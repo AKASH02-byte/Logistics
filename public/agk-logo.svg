@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 760 340" role="img" aria-labelledby="title desc">
+  <title id="title">AGK Logistics and Infrastructure</title>
+  <desc id="desc">AGK logistics and infrastructure logo in gold, white, and navy.</desc>
+  <rect width="760" height="340" rx="18" fill="#020d25"/>
+  <g fill="none" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M88 228 212 72l124 156h-46l-78-103-78 103Z" fill="#e5ac3c" stroke="#f5c968" stroke-width="2"/>
+    <path d="m185 194 27-37 28 37" stroke="#f7f8fa" stroke-width="7"/>
+    <path d="M201 188v-35m13 35v-48m14 48v-59" stroke="#f7f8fa" stroke-width="7"/>
+    <path d="M224 151c26 25 43 35 65 45-20-2-41-10-61-25" stroke="#f7f8fa" stroke-width="3"/>
+    <path d="M336 110c13-26 36-39 68-39h82l-29 29h-56c-17 0-28 7-35 20l-9 17Z" fill="#f6f7f9" stroke="#fff" stroke-width="2"/>
+    <path d="m384 147 28 31h75v-61h-73l-23 25h67v10h-50l-24-5Z" fill="#f6f7f9" stroke="#fff" stroke-width="2"/>
+    <path d="m522 117 91-46h48l-100 78 100 79h-48l-91-69 45 34" fill="#e5ac3c" stroke="#f5c968" stroke-width="2"/>
+    <path d="m546 179 72 49m-87-71 69 51" stroke="#020d25" stroke-width="4"/>
+    <path d="M82 278h596" stroke="#c58b25" stroke-width="2"/>
+    <path d="M82 278h244m24 0h328" stroke="#f0ba45" stroke-width="4"/>
+  </g>
+  <text x="380" y="263" fill="#f7f8fa" font-family="Arial, Helvetica, sans-serif" font-size="23" letter-spacing="8" text-anchor="middle">LOGISTICS &amp; INFRASTRUCTURE</text>
+</svg>
