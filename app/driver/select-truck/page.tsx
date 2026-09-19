@@ -1,22 +1,35 @@
 import { redirect } from "next/navigation";
-import { getAvailableTrucks, getOpenSessionForLabour } from "@/lib/demo/store";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { requireLabourSession } from "@/lib/rbac/labour";
 import { TruckPicker } from "./TruckPicker";
 
 export default async function SelectTruckPage() {
   const labour = await requireLabourSession();
+  const supabase = createSupabaseServiceRoleClient();
 
-  if (getOpenSessionForLabour(labour.id)) {
+  const { data: existingSession } = await supabase
+    .from("vehicle_sessions")
+    .select("id")
+    .eq("labour_id", labour.id)
+    .eq("status", "OPEN")
+    .maybeSingle();
+  if (existingSession) {
     redirect("/driver/dashboard");
   }
 
-  const trucks = getAvailableTrucks().map((t) => ({
-    id: t.id,
-    registration_number: t.registrationNumber,
-    make: t.make,
-    model: t.model,
-    current_odometer: String(t.currentOdometer),
-  }));
+  const { data: openSessions } = await supabase
+    .from("vehicle_sessions")
+    .select("truck_id")
+    .eq("status", "OPEN");
+  const busyTruckIds = (openSessions ?? []).map((session) => session.truck_id);
+  let query = supabase
+    .from("trucks")
+    .select("id, registration_number, make, model, current_odometer")
+    .eq("status", "ACTIVE")
+    .is("deleted_at", null)
+    .order("registration_number");
+  if (busyTruckIds.length > 0) query = query.not("id", "in", `(${busyTruckIds.join(",")})`);
+  const { data: trucks } = await query;
 
   return (
     <div>
@@ -26,7 +39,7 @@ export default async function SelectTruckPage() {
       <p style={{ color: "#6b7280", marginBottom: "1.25rem" }}>
         Welcome, {labour.full_name}. Pick the truck you&rsquo;re driving today.
       </p>
-      <TruckPicker trucks={trucks} />
+      <TruckPicker trucks={trucks ?? []} />
     </div>
   );
 }

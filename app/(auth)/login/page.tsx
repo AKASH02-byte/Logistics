@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Loader2, Check } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DriverLoginTruck, type TruckAnimationState } from "@/components/auth/DriverLoginTruck";
+import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 
 type Tab = "labour" | "admin";
 type SubmitState = "idle" | "loading" | "success" | "error";
@@ -17,14 +18,25 @@ export default function LoginPage() {
   const [loginKey, setLoginKey] = useState("");
   const [showKey, setShowKey] = useState(false);
 
-  const [adminId, setAdminId] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-
   const [submitState, setSubmitState] = useState<SubmitState>("idle");
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [shake, setShake] = useState(false);
   const [truckState, setTruckState] = useState<TruckAnimationState>("idle");
+
+  async function handleGoogleSignIn() {
+    setErrorMessage(null);
+    setSubmitState("loading");
+    const supabase = createSupabaseBrowserClient();
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: "google",
+      options: { redirectTo: `${window.location.origin}/api/auth/callback` },
+    });
+
+    if (error) {
+      setSubmitState("error");
+      setErrorMessage(error.message);
+    }
+  }
 
   async function submit(
     event: FormEvent,
@@ -216,57 +228,13 @@ export default function LoginPage() {
                 </motion.button>
               </motion.form>
             ) : (
-              <motion.form
+              <motion.div
                 key="admin"
                 initial={{ opacity: 0, y: 10 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -10 }}
                 transition={{ duration: 0.2 }}
-                onSubmit={(e) =>
-                  submit(e, "/api/admin/login", { adminId, password }, "/admin/dashboard")
-                }
               >
-                <div className="auth-field">
-                  <label className="auth-label" htmlFor="adminId">
-                    Admin ID
-                  </label>
-                  <input
-                    id="adminId"
-                    className="auth-input"
-                    placeholder="admin"
-                    autoComplete="username"
-                    value={adminId}
-                    onChange={(e) => setAdminId(e.target.value)}
-                    required
-                  />
-                </div>
-
-                <div className="auth-field">
-                  <label className="auth-label" htmlFor="password">
-                    Password
-                  </label>
-                  <div className="auth-input-wrap">
-                    <input
-                      id="password"
-                      className="auth-input"
-                      type={showPassword ? "text" : "password"}
-                      placeholder="••••••••"
-                      autoComplete="current-password"
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="auth-input-toggle"
-                      onClick={() => setShowPassword((v) => !v)}
-                      aria-label={showPassword ? "Hide password" : "Show password"}
-                    >
-                      {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
-                    </button>
-                  </div>
-                </div>
-
                 {errorMessage && (
                   <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="auth-error">
                     {errorMessage}
@@ -274,22 +242,17 @@ export default function LoginPage() {
                 )}
 
                 <motion.button
+                  type="button"
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
-                  type="submit"
                   className="auth-submit"
-                  data-state={submitState === "success" ? "success" : undefined}
                   disabled={isBusy}
+                  onClick={handleGoogleSignIn}
                 >
                   {submitState === "loading" && <Loader2 className="auth-spinner" size={18} />}
-                  {submitState === "success" && <Check size={18} />}
-                  {submitState === "loading"
-                    ? "Signing in..."
-                    : submitState === "success"
-                      ? "Welcome aboard"
-                      : "Sign in"}
+                  {submitState === "loading" ? "Connecting..." : "Continue with Google"}
                 </motion.button>
-              </motion.form>
+              </motion.div>
             )}
           </AnimatePresence>
         </motion.div>

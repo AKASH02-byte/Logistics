@@ -1,8 +1,8 @@
+import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { jsonOk } from "@/lib/api/response";
 
-export async function POST() {
+export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();
   await supabase.auth.signOut();
-  return jsonOk({ success: true });
+  return NextResponse.redirect(new URL("/login", request.url));
 }

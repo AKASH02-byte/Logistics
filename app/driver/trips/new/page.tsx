@@ -1,17 +1,23 @@
 import { redirect } from "next/navigation";
-import { getOpenSessionForLabour, findTruckById } from "@/lib/demo/store";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { requireLabourSession } from "@/lib/rbac/labour";
 import { TripForm } from "./TripForm";
 
 export default async function NewTripPage() {
   const labour = await requireLabourSession();
-  const session = getOpenSessionForLabour(labour.id);
+  const supabase = createSupabaseServiceRoleClient();
+  const { data: session } = await supabase
+    .from("vehicle_sessions")
+    .select("id, truck_id, opening_odometer, trucks(registration_number)")
+    .eq("labour_id", labour.id)
+    .eq("status", "OPEN")
+    .maybeSingle();
 
   if (!session) {
     redirect("/driver/select-truck");
   }
 
-  const truck = findTruckById(session.truckId);
+  const truck = session.trucks as unknown as { registration_number: string };
 
   return (
     <div className="mx-auto max-w-xl pb-10">
@@ -21,11 +27,11 @@ export default async function NewTripPage() {
         </p>
         <h1 className="mt-3 text-3xl font-black tracking-tight text-white">Log a Trip</h1>
         <p className="mt-2 text-sm text-slate-300">
-          Recording trip for <span className="font-semibold text-white">{truck?.registrationNumber}</span>
+          Recording trip for <span className="font-semibold text-white">{truck?.registration_number}</span>
         </p>
       </div>
 
-      <TripForm vehicleSessionId={session.id} startOdometer={session.openingOdometer} />
+      <TripForm vehicleSessionId={session.id} startOdometer={Number(session.opening_odometer)} />
     </div>
   );
 }

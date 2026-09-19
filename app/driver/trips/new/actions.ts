@@ -1,6 +1,7 @@
 "use server";
 
-import { logTrip, demoStore, getOpenSessionForLabour } from "@/lib/demo/store";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
+import { requireLabourSession } from "@/lib/rbac/labour";
 import { revalidatePath } from "next/cache";
 import {
   validateTripOdometer,
@@ -27,10 +28,17 @@ export async function submitTrip(
   toLocation: string
 ): Promise<TripSubmitResult> {
   // ── Look up the session's opening odometer for session-level validation ─
-  const session = demoStore.vehicleSessions.find(
-    (s) => s.id === vehicleSessionId
-  );
-  const sessionOpeningOdometer = session?.openingOdometer;
+  const labour = await requireLabourSession();
+  const supabase = createSupabaseServiceRoleClient();
+  const { data: session } = await supabase
+    .from("vehicle_sessions")
+    .select("id, truck_id, opening_odometer")
+    .eq("id", vehicleSessionId)
+    .eq("labour_id", labour.id)
+    .eq("status", "OPEN")
+    .maybeSingle();
+  if (!session) return { ok: false, error: "Active vehicle session not found" };
+  const sessionOpeningOdometer = Number(session.opening_odometer);
 
   // ── Validate ─────────────────────────────────────────────────────────────
   const validation = validateTripOdometer(
@@ -67,7 +75,19 @@ export async function submitTrip(
     .map((i) => i.message);
 
   // ── Persist ───────────────────────────────────────────────────────────────
-  logTrip({ vehicleSessionId, startOdometer, endOdometer, fromLocation, toLocation });
+  const { error } = await supabase.from("trips").insert({
+    vehicle_session_id: session.id,
+    truck_id: session.truck_id,
+    labour_id: labour.id,
+    origin: fromLocation,
+    destination: toLocation,
+    starting_odometer: startOdometer,
+    ending_odometer: endOdometer,
+    status: "COMPLETED",
+    started_at: new Date().toISOString(),
+    ended_at: new Date().toISOString(),
+  });
+  if (error) return { ok: false, error: "Could not save trip" };
   revalidatePath("/driver/dashboard");
   revalidatePath("/admin/trips");
   revalidatePath("/admin/dashboard");

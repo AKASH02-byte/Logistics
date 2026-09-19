@@ -1,16 +1,26 @@
 import { redirect } from "next/navigation";
-import { findTruckById, getOpenSessionForLabour } from "@/lib/demo/store";
+import { createSupabaseServiceRoleClient } from "@/lib/supabase/server";
 import { requireLabourSession } from "@/lib/rbac/labour";
 
 export default async function DriverDashboardPage() {
   const labour = await requireLabourSession();
-  const session = getOpenSessionForLabour(labour.id);
+  const supabase = createSupabaseServiceRoleClient();
+  const { data: session } = await supabase
+    .from("vehicle_sessions")
+    .select("*, trucks(registration_number, make, model)")
+    .eq("labour_id", labour.id)
+    .eq("status", "OPEN")
+    .maybeSingle();
 
   if (!session) {
     redirect("/driver/select-truck");
   }
 
-  const truck = findTruckById(session.truckId);
+  const truck = session.trucks as unknown as {
+    registration_number: string;
+    make: string | null;
+    model: string | null;
+  };
 
   return (
     <div className="space-y-6">
@@ -37,19 +47,19 @@ export default async function DriverDashboardPage() {
                 Assigned vehicle
               </p>
               <div className="mt-2 text-2xl font-black text-white">
-                {truck?.registrationNumber ?? "Vehicle"}
+                {truck?.registration_number ?? "Vehicle"}
               </div>
             </div>
             <div className="rounded-xl bg-amber-500/10 px-3 py-2 text-right">
               <div className="text-[10px] uppercase tracking-[0.22em] text-amber-300">KM</div>
               <div className="text-lg font-bold text-amber-200">
-                {session.openingOdometer.toLocaleString("en-IN")}
+                {Number(session.opening_odometer).toLocaleString("en-IN")}
               </div>
             </div>
           </div>
 
           <div className="mt-4 flex items-center justify-between gap-3 rounded-xl border border-slate-700/80 bg-slate-900/80 px-3 py-2 text-sm text-slate-300">
-            <span>{truck?.make ?? "Vehicle"} {truck?.model ?? "model"}</span>
+              <span>{truck?.make ?? "Vehicle"} {truck?.model ?? "model"}</span>
             <span className="rounded-full bg-slate-800 px-2 py-1 text-xs font-medium text-slate-200">
               Opening odometer
             </span>
@@ -63,7 +73,7 @@ export default async function DriverDashboardPage() {
             <div className="rounded-xl border border-slate-700 bg-slate-900/80 p-3">
               <div className="text-[10px] uppercase tracking-[0.2em] text-slate-400">Last meter</div>
               <div className="mt-2 font-semibold text-white">
-                {session.openingOdometer.toLocaleString("en-IN")} km
+                {Number(session.opening_odometer).toLocaleString("en-IN")} km
               </div>
             </div>
           </div>

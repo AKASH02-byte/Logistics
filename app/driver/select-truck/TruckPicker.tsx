@@ -46,11 +46,11 @@ export function TruckPicker({ trucks }: { trucks: AvailableTruck[] }) {
       {error && (
         <p
           style={{
-            background: "#fee2e2",
-            color: "#991b1b",
-            padding: "0.6rem 0.85rem",
-            borderRadius: 8,
-            marginBottom: "1rem",
+              background: "#fee2e2",
+              color: "#991b1b",
+              padding: "0.6rem 0.85rem",
+              borderRadius: 8,
+              marginBottom: "1rem",
           }}
         >
           {error}
@@ -72,13 +72,29 @@ export function TruckPicker({ trucks }: { trucks: AvailableTruck[] }) {
               border: "1px solid #d1d5db",
               background: "#fff",
               textAlign: "left",
+              color: "#0f172a",
               cursor: selecting ? "wait" : "pointer",
               opacity: selecting && selecting !== truck.id ? 0.5 : 1,
+              transition: "border-color 160ms ease, box-shadow 160ms ease, transform 160ms ease",
+            }}
+            onMouseEnter={(event) => {
+              if (!selecting) {
+                event.currentTarget.style.borderColor = "#f59e0b";
+                event.currentTarget.style.boxShadow = "0 8px 24px rgba(15, 23, 42, 0.12)";
+                event.currentTarget.style.transform = "translateY(-1px)";
+              }
+            }}
+            onMouseLeave={(event) => {
+              event.currentTarget.style.borderColor = "#d1d5db";
+              event.currentTarget.style.boxShadow = "none";
+              event.currentTarget.style.transform = "none";
             }}
           >
-            <Truck size={22} />
+            <Truck size={22} color="#d97706" strokeWidth={2.4} />
             <div>
-              <div style={{ fontWeight: 700 }}>{truck.registration_number}</div>
+              <div style={{ fontWeight: 800, color: "#111827", letterSpacing: "0.03em" }}>
+                {truck.registration_number}
+              </div>
               <div style={{ fontSize: "0.85rem", color: "#6b7280" }}>
                 {[truck.make, truck.model].filter(Boolean).join(" ") || "Truck"} ·{" "}
                 {Number(truck.current_odometer).toLocaleString("en-IN")} km

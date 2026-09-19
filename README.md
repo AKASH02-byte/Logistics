@@ -14,6 +14,11 @@ distance is `ending odometer − starting odometer`.
 Start with [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and
 [docs/DEVELOPMENT_PLAN.md](docs/DEVELOPMENT_PLAN.md) before touching code.
 
+For deployment, see [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md). The Next.js
+frontend and `/api/*` backend routes deploy together on Vercel. The current
+demo store is in-memory and must be replaced with the documented Supabase
+persistence before using production data.
+
 ## Documentation
 
 - [Architecture](docs/ARCHITECTURE.md)

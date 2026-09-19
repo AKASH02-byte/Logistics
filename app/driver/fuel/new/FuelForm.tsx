@@ -34,8 +34,8 @@ export function FuelForm({
     try {
       await submitFuel(vehicleSessionId, currentOdo, Number(liters), Number(cost));
       router.push("/driver/dashboard");
-    } catch (err: any) {
-      setError(err.message || "Failed to log fuel");
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : "Failed to log fuel");
       setSubmitting(false);
     }
   };
